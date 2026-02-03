@@ -3,5 +3,6 @@ flask_sqlalchemy
 flask_login
 flask_cors
 gunicorn
-psycopg2-binary==2.9.9
+psycopg2-binary
 python-dotenv
+requests
