@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+
+{% block title %}{{ 'Modifier' if annonce else 'Nouvelle' }} Annonce - Admin Labmath{% endblock %}
+
+{% block page_title %}{{ 'Modifier' if annonce else 'Nouvelle' }} Annonce{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="titre" class="form-label">Titre *</label>
+                        <input type="text" class="form-control" id="titre" name="titre" 
+                               value="{{ annonce.titre if annonce else '' }}" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="type_annonce" class="form-label">Type d'annonce *</label>
+                        <select class="form-select" id="type_annonce" name="type_annonce" required>
+                            <option value="info" {% if annonce and annonce.type_annonce == 'info' %}selected{% endif %}>
+                                Information
+                            </option>
+                            <option value="urgence" {% if annonce and annonce.type_annonce == 'urgence' %}selected{% endif %}>
+                                Urgence
+                            </option>
+                            <option value="evenement" {% if annonce and annonce.type_annonce == 'evenement' %}selected{% endif %}>
+                                Événement
+                            </option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="contenu" class="form-label">Contenu *</label>
+                        <textarea class="form-control" id="contenu" name="contenu" rows="6" required>{{ annonce.contenu if annonce else '' }}</textarea>
+                        <div class="form-text">Détails complets de l'annonce. HTML autorisé.</div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="date_debut" class="form-label">Date de début</label>
+                                <input type="datetime-local" class="form-control" id="date_debut" name="date_debut"
+                                       value="{{ annonce.date_debut.strftime('%Y-%m-%dT%H:%M') if annonce and annonce.date_debut else '' }}">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="date_fin" class="form-label">Date de fin</label>
+                                <input type="datetime-local" class="form-control" id="date_fin" name="date_fin"
+                                       value="{{ annonce.date_fin.strftime('%Y-%m-%dT%H:%M') if annonce and annonce.date_fin else '' }}">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="est_active" name="est_active" 
+                                   value="true" {% if not annonce or annonce.est_active %}checked{% endif %}>
+                            <label class="form-check-label" for="est_active">
+                                Annonce active
+                            </label>
+                        </div>
+                        <div class="form-text">Les annonces inactives ne sont pas affichées sur le site.</div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('annonces') }}" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left"></i> Annuler
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-save"></i> {{ 'Mettre à jour' if annonce else 'Créer' }}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-info-circle"></i> Types d'annonces</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <span class="badge bg-primary mb-2 d-block">
+                        <i class="bi bi-info-circle"></i> Information
+                    </span>
+                    <p class="small">Pour les nouvelles, mises à jour et informations générales.</p>
+                </div>
+                
+                <div class="mb-3">
+                    <span class="badge bg-danger mb-2 d-block">
+                        <i class="bi bi-exclamation-triangle"></i> Urgence
+                    </span>
+                    <p class="small">Pour les annonces importantes qui nécessitent une attention immédiate.</p>
+                </div>
+                
+                <div class="mb-3">
+                    <span class="badge bg-success mb-2 d-block">
+                        <i class="bi bi-calendar-event"></i> Événement
+                    </span>
+                    <p class="small">Pour les conférences, séminaires, ateliers et autres événements.</p>
+                </div>
+                
+                <hr>
+                
+                <p><strong>Conseils:</strong></p>
+                <ul class="small">
+                    <li>Les annonces urgentes apparaissent en haut de la page</li>
+                    <li>Spécifiez les dates pour les événements</li>
+                    <li>Utilisez un langage clair et concis</li>
+                    <li>Vérifiez l'orthographe avant publication</li>
+                </ul>
+                
+                {% if annonce %}
+                <hr>
+                <div class="small">
+                    <p><strong>Informations techniques:</strong></p>
+                    <p>ID: {{ annonce.id }}</p>
+                    <p>Créée le: {{ annonce.date_creation.strftime('%d/%m/%Y %H:%M') }}</p>
+                    {% if annonce.date_modification %}
+                    <p>Modifiée le: {{ annonce.date_modification.strftime('%d/%m/%Y %H:%M') }}</p>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Mise à jour automatique du champ date_fin si vide et date_debit rempli
+    document.getElementById('date_debut').addEventListener('change', function() {
+        const dateFin = document.getElementById('date_fin');
+        if (!dateFin.value && this.value) {
+            // Ajouter 7 jours par défaut
+            const dateDebut = new Date(this.value);
+            dateDebut.setDate(dateDebut.getDate() + 7);
+            
+            const year = dateDebut.getFullYear();
+            const month = String(dateDebut.getMonth() + 1).padStart(2, '0');
+            const day = String(dateDebut.getDate()).padStart(2, '0');
+            const hours = String(dateDebut.getHours()).padStart(2, '0');
+            const minutes = String(dateDebut.getMinutes()).padStart(2, '0');
+            
+            dateFin.value = `${year}-${month}-${day}T${hours}:${minutes}`;
+        }
+    });
+</script>
+{% endblock %}

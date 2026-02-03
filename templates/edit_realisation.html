@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+
+{% block title %}{{ 'Modifier' if realisation else 'Nouvelle' }} Réalisation - Admin Labmath{% endblock %}
+
+{% block page_title %}{{ 'Modifier' if realisation else 'Nouvelle' }} Réalisation{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body">
+                <form method="POST" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label for="titre" class="form-label">Titre *</label>
+                        <input type="text" class="form-control" id="titre" name="titre" 
+                               value="{{ realisation.titre if realisation else '' }}" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description</label>
+                        <textarea class="form-control" id="description" name="description" rows="4">{{ realisation.description if realisation else '' }}</textarea>
+                        <div class="form-text">Décrivez brièvement cette réalisation.</div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="categorie" class="form-label">Catégorie</label>
+                                <select class="form-select" id="categorie" name="categorie">
+                                    <option value="">Sélectionner une catégorie</option>
+                                    <option value="projet" {% if realisation and realisation.categorie == 'projet' %}selected{% endif %}>Projet</option>
+                                    <option value="recherche" {% if realisation and realisation.categorie == 'recherche' %}selected{% endif %}>Recherche</option>
+                                    <option value="publication" {% if realisation and realisation.categorie == 'publication' %}selected{% endif %}>Publication</option>
+                                    <option value="innovation" {% if realisation and realisation.categorie == 'innovation' %}selected{% endif %}>Innovation</option>
+                                    <option value="partenariat" {% if realisation and realisation.categorie == 'partenariat' %}selected{% endif %}>Partenariat</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="date_realisation" class="form-label">Date de réalisation</label>
+                                <input type="date" class="form-control" id="date_realisation" name="date_realisation"
+                                       value="{{ realisation.date_realisation.strftime('%Y-%m-%d') if realisation and realisation.date_realisation else '' }}">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="image_url" class="form-label">URL de l'image</label>
+                        <input type="url" class="form-control" id="image_url" name="image_url"
+                               value="{{ realisation.image_url if realisation else '' }}"
+                               placeholder="https://example.com/image.jpg">
+                        <div class="form-text">URL complète de l'image représentative.</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Ou télécharger une image</label>
+                        <input type="file" class="form-control" id="image_file" name="image_file" accept="image/*">
+                        <div class="form-text">Taille max: 5MB. Formats: JPG, PNG, GIF.</div>
+                    </div>
+                    
+                    {% if realisation and realisation.image_url %}
+                    <div class="mb-3">
+                        <label class="form-label">Image actuelle</label>
+                        <div>
+                            <img src="{{ realisation.image_url }}" alt="Image actuelle" 
+                                 style="max-width: 200px; max-height: 150px; border: 1px solid #ddd; border-radius: 5px;">
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('realisations') }}" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left"></i> Annuler
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-save"></i> {{ 'Mettre à jour' if realisation else 'Créer' }}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-info-circle"></i> Informations</h5>
+            </div>
+            <div class="card-body">
+                <p><strong>Conseils pour les réalisations:</strong></p>
+                <ul>
+                    <li>Utilisez des titres clairs et descriptifs</li>
+                    <li>Choisissez une image de qualité</li>
+                    <li>Catégorisez correctement la réalisation</li>
+                    <li>Indiquez la date exacte de réalisation</li>
+                    <li>Les images sont automatiquement redimensionnées</li>
+                </ul>
+                
+                <hr>
+                
+                <p><strong>Statistiques:</strong></p>
+                <div class="row">
+                    <div class="col-6">
+                        <div class="text-center p-2 border rounded">
+                            <h6 class="mb-0">Total</h6>
+                            <h4 class="mb-0">{{ stats.realisations_count if stats else 0 }}</h4>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="text-center p-2 border rounded">
+                            <h6 class="mb-0">Images</h6>
+                            <h4 class="mb-0">{{ stats.realisations_with_images if stats else 0 }}</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Prévisualisation de l'image
+    document.getElementById('image_file').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const preview = document.createElement('img');
+                preview.src = e.target.result;
+                preview.style.maxWidth = '200px';
+                preview.style.maxHeight = '150px';
+                preview.style.border = '1px solid #ddd';
+                preview.style.borderRadius = '5px';
+                preview.style.marginTop = '10px';
+                
+                const container = document.querySelector('form');
+                const existingPreview = container.querySelector('#image_preview');
+                if (existingPreview) {
+                    existingPreview.remove();
+                }
+                
+                preview.id = 'image_preview';
+                container.appendChild(preview);
+            }
+            reader.readAsDataURL(file);
+        }
+    });
+</script>
+{% endblock %}

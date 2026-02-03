@@ -1,0 +1,187 @@
+{% extends "base.html" %}
+
+{% block title %}{{ 'Modifier' if offre else 'Nouvelle' }} Offre - Admin Labmath{% endblock %}
+
+{% block page_title %}{{ 'Modifier' if offre else 'Nouvelle' }} Offre{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-body">
+                <form method="POST">
+                    <div class="mb-3">
+                        <label for="titre" class="form-label">Titre *</label>
+                        <input type="text" class="form-control" id="titre" name="titre" 
+                               value="{{ offre.titre if offre else '' }}" required>
+                        <div class="form-text">Ex: "Stage en Data Science - Printemps 2024"</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="type_offre" class="form-label">Type d'offre *</label>
+                        <select class="form-select" id="type_offre" name="type_offre" required>
+                            <option value="emploi" {% if offre and offre.type_offre == 'emploi' %}selected{% endif %}>
+                                Offre d'emploi
+                            </option>
+                            <option value="stage" {% if offre and offre.type_offre == 'stage' %}selected{% endif %}>
+                                Stage
+                            </option>
+                            <option value="formation" {% if offre and offre.type_offre == 'formation' %}selected{% endif %}>
+                                Formation
+                            </option>
+                            <option value="autre" {% if offre and offre.type_offre == 'autre' %}selected{% endif %}>
+                                Autre
+                            </option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description détaillée *</label>
+                        <textarea class="form-control" id="description" name="description" rows="8" required>{{ offre.description if offre else '' }}</textarea>
+                        <div class="form-text">Décrivez en détail l'offre: missions, compétences requises, avantages, etc.</div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="lieu" class="form-label">Lieu</label>
+                                <input type="text" class="form-control" id="lieu" name="lieu"
+                                       value="{{ offre.lieu if offre else '' }}"
+                                       placeholder="Ex: Paris, Télétravail, Mixte">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="date_limite" class="form-label">Date limite</label>
+                                <input type="date" class="form-control" id="date_limite" name="date_limite"
+                                       value="{{ offre.date_limite.strftime('%Y-%m-%d') if offre and offre.date_limite else '' }}">
+                                <div class="form-text">Date limite de candidature</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="est_active" name="est_active" 
+                                   value="true" {% if not offre or offre.est_active %}checked{% endif %}>
+                            <label class="form-check-label" for="est_active">
+                                Offre active
+                            </label>
+                        </div>
+                        <div class="form-text">Les offres inactives ne sont pas affichées sur le site.</div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('offres') }}" class="btn btn-secondary">
+                            <i class="bi bi-arrow-left"></i> Annuler
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-save"></i> {{ 'Mettre à jour' if offre else 'Créer' }}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="bi bi-info-circle"></i> Guide de publication</h5>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <h6><i class="bi bi-person-badge text-primary"></i> Offres d'emploi</h6>
+                    <ul class="small">
+                        <li>Précisez le poste exact</li>
+                        <li>Détaillez les missions</li>
+                        <li>Listez les compétences requises</li>
+                        <li>Mentionnez le salaire/avantages</li>
+                    </ul>
+                </div>
+                
+                <div class="mb-3">
+                    <h6><i class="bi bi-mortarboard text-success"></i> Stages</h6>
+                    <ul class="small">
+                        <li>Durée du stage</li>
+                        <li>Niveau d'études requis</li>
+                        <li>Gratification</li>
+                        <li>Période de stage</li>
+                    </ul>
+                </div>
+                
+                <div class="mb-3">
+                    <h6><i class="bi bi-book text-warning"></i> Formations</h6>
+                    <ul class="small">
+                        <li>Durée de la formation</li>
+                        <li>Prérequis</li>
+                        <li>Coût éventuel</li>
+                        <li>Certification</li>
+                    </ul>
+                </div>
+                
+                <hr>
+                
+                <div class="alert alert-info small">
+                    <strong><i class="bi bi-lightbulb"></i> Conseil:</strong>
+                    <p class="mb-0">Utilisez des mots-clés pertinents pour améliorer la visibilité de l'offre.</p>
+                </div>
+                
+                {% if offre %}
+                <hr>
+                <div class="small">
+                    <p><strong>Statistiques:</strong></p>
+                    {% if offre.date_limite %}
+                        {% set days_left = (offre.date_limite - now.date()).days %}
+                        {% if days_left >= 0 %}
+                        <p>Jours restants: <span class="badge bg-success">{{ days_left }}</span></p>
+                        {% else %}
+                        <p>Statut: <span class="badge bg-danger">Expirée</span></p>
+                        {% endif %}
+                    {% endif %}
+                    <p>Créée le: {{ offre.date_creation.strftime('%d/%m/%Y') }}</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Prévisualisation de la date limite
+    document.getElementById('date_limite').addEventListener('change', function() {
+        const dateLimite = new Date(this.value);
+        const aujourdhui = new Date();
+        const difference = Math.ceil((dateLimite - aujourdhui) / (1000 * 60 * 60 * 24));
+        
+        let message = '';
+        let classe = '';
+        
+        if (difference > 30) {
+            message = `${difference} jours restants`;
+            classe = 'text-success';
+        } else if (difference > 7) {
+            message = `${difference} jours restants`;
+            classe = 'text-warning';
+        } else if (difference >= 0) {
+            message = `${difference} jours restants - Dernière semaine !`;
+            classe = 'text-danger';
+        } else {
+            message = 'Date déjà passée';
+            classe = 'text-danger';
+        }
+        
+        // Afficher le message
+        let messageDiv = document.getElementById('date_message');
+        if (!messageDiv) {
+            messageDiv = document.createElement('div');
+            messageDiv.id = 'date_message';
+            messageDiv.className = 'mt-2';
+            this.parentNode.appendChild(messageDiv);
+        }
+        messageDiv.innerHTML = `<span class="${classe}"><i class="bi bi-calendar"></i> ${message}</span>`;
+    });
+</script>
+{% endblock %}
