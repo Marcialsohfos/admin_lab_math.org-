@@ -12,7 +12,7 @@ app = Flask(__name__)
 CORS(app)  # Autorise les requêtes cross-origin
 
 # --- CONFIGURATION ---
-app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'votre_clé_secrète_dev')
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', '32015@1a')
 
 # Correction impérative pour PostgreSQL sur Render
 database_url = os.environ.get('DATABASE_URL', 'sqlite:///labmath_db.sqlite')
