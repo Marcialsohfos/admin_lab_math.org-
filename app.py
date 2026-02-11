@@ -7,7 +7,10 @@ from functools import wraps
 import requests
 
 # Création de l'application Flask
-app = Flask(__name__)
+# CORRECTION: Spécification explicite du dossier templates
+app = Flask(__name__, 
+            template_folder='templates',  # 👈 Correction cruciale
+            static_folder='static')
 CORS(app)
 
 # --- CONFIGURATION ---
@@ -92,7 +95,7 @@ class Offre(db.Model):
     est_active = db.Column(db.Boolean, default=True)
     sync_id = db.Column(db.String(100))
 
-# --- FONCTIONS DE SYNCHRONISATION (avec gestion d'erreurs améliorée) ---
+# --- FONCTIONS DE SYNCHRONISATION ---
 def sync_activite(activite):
     """Synchronise une activité avec le site principal"""
     if not API_KEY:
@@ -202,7 +205,7 @@ def dashboard():
         recent_activities = Activite.query.order_by(Activite.date_creation.desc()).limit(5).all()
         recent_annonces = Annonce.query.order_by(Annonce.date_creation.desc()).limit(5).all()
         
-        return render_template('dashboard.html', 
+        return render_template('dashboard.html',  # 👈 Utilisation de dashboard.html
                               stats=stats, 
                               now=datetime.utcnow(),
                               site_url=SITE_URL,
@@ -210,9 +213,11 @@ def dashboard():
                               recent_annonces=recent_annonces)
     except Exception as e:
         flash(f'Erreur lors du chargement du dashboard: {str(e)}', 'danger')
-        return render_template('dashboard_simple.html', 
+        # CORRECTION: fallback vers un template simple si dashboard.html n'existe pas
+        return render_template('simple_dashboard.html',  # 👈 Créez ce fichier
                               stats={'activities_count': 0, 'realisations_count': 0, 'annonces_count': 0, 'offres_count': 0},
-                              now=datetime.utcnow())
+                              now=datetime.utcnow(),
+                              error=str(e))
 
 # --- ROUTES ACTIVITÉS ---
 @app.route('/activites')
@@ -253,8 +258,8 @@ def nouvel_activite():
     
     return render_template('edit_activite.html', action='nouveau', activite=None)
 
-# --- ROUTES POUR LES AUTRES MODÈLES (à ajouter ici) ---
-# ... (ajoutez les routes pour realisations, annonces, offres)
+# --- ROUTES POUR LES AUTRES MODÈLES ---
+# Ajoutez ici vos routes pour realisations, annonces, offres
 
 # --- ROUTE DE TEST ---
 @app.route('/test')
@@ -264,21 +269,28 @@ def test():
         'message': 'Admin LabMath fonctionne!',
         'database': str(app.config['SQLALCHEMY_DATABASE_URI']),
         'site_url': SITE_URL,
-        'api_key_configured': bool(API_KEY)
+        'api_key_configured': bool(API_KEY),
+        'template_folder': app.template_folder  # 👈 Utile pour le debug
     })
 
 # --- GESTION DES ERREURS ---
 @app.errorhandler(404)
 def not_found(e):
     if 'user_id' in session:
-        return render_template('404.html'), 404
+        try:
+            return render_template('404.html'), 404
+        except:
+            return "Page non trouvée - 404", 404
     return redirect(url_for('login'))
 
 @app.errorhandler(500)
 def internal_error(e):
     db.session.rollback()
     if 'user_id' in session:
-        return render_template('500.html', error=str(e)), 500
+        try:
+            return render_template('500.html', error=str(e)), 500
+        except:
+            return f"Erreur interne: {str(e)}", 500
     return redirect(url_for('login'))
 
 # --- INITIALISATION ---
@@ -286,6 +298,15 @@ with app.app_context():
     try:
         db.create_all()
         print("✅ Base de données initialisée avec succès")
+        print(f"📁 Dossier templates: {app.template_folder}")
+        # Vérifier que les templates existent
+        import os
+        templates_path = app.template_folder
+        if os.path.exists(templates_path):
+            files = os.listdir(templates_path)
+            print(f"📄 Templates trouvés: {files}")
+        else:
+            print(f"⚠️  Dossier templates introuvable: {templates_path}")
     except Exception as e:
         print(f"❌ Erreur base de données: {str(e)}")
 
